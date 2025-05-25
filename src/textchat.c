@@ -8,9 +8,11 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include "server.h"
+#include "logs.h"
 
 int main(void) {
 	// Création et initialisation du tableau contenant les descripteurs des sockets clients
+	OUT_LOG("Lancement TextChat");
 	int clients[NB_CLIENTS];
 	for (int i = 0; i < NB_CLIENTS; i++) {
 		clients[i] = -1;

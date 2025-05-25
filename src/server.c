@@ -8,10 +8,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include "server.h"
-
-
-
-
+#include "logs.h"
 
 // Initialisation de la structure sockaddr_in
 void initAdresse(struct sockaddr_in * adresse) {
@@ -21,37 +18,31 @@ void initAdresse(struct sockaddr_in * adresse) {
 }
 // Démarrage de la socket serveur
 int initSocket(struct sockaddr_in * adresse) {
-	// Descripteur de socket
 	int fdsocket;
 	// Nombre d'options
 	int opt = 1;
 	// Création de la socket en TCP
 	if ((fdsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) {
-		printf("Echéc de la création: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+		FATAL("Echéc de la création", (errno));
 	}
-	printf("Création de la socket\n");
+	OUT_LOG("Création de la socket");
 	// Paramètrage de la socket
 	if (setsockopt(fdsocket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt,
 			sizeof(opt)) != 0) {
-		printf("Echéc de paramètrage: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+		FATAL("Echéc de paramètrage", (errno));
 	}
-	printf("Paramètrage de la socket\n");
 	// Attachement de la socket sur le port et l'adresse IP
 	if (bind(fdsocket, (struct sockaddr *) adresse, sizeof(*adresse)) != 0) {
-		printf("Echéc d'attachement: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+		FATAL("Echéc d'attachement", (errno));
 	}
-	printf("Attachement de la socket sur le port %i\n", PORT);
+	OUT_LOGINT("Attachement de la socket sur le port", PORT);
 	// Passage en écoute de la socket
 	if (listen(fdsocket, BACKLOG) != 0) {
-		printf("Echéc de la mise en écoute: %s\n", strerror(errno));
-		exit(EXIT_FAILURE);
+		FATAL("Echéc de la mise en écoute", (errno));
 	}
 	// Passage en mode non bloquant
 	fcntl(fdsocket, F_SETFL, O_NONBLOCK);
-	printf("Mise en écoute de la socket\n");
+	OUT_LOG("Mise en écoute de la socket");
 	return fdsocket;
 }
 // Attente de connexion d'un client
@@ -65,7 +56,9 @@ int waitForClient(int * serverSocket) {
 		// Convertion de l'IP en texte
 		char ip[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(clientAdresse.sin_addr), ip, INET_ADDRSTRLEN);
-		printf("Connexion de %s:%i\n", ip, clientAdresse.sin_port);
+		OUT_LOG("Connection établie");
+		OUT_LOGCHAR("IP source",ip);
+		OUT_LOGINT("Port",clientAdresse.sin_port);		
 		// Passage en mode non bloquant
 		int opt = 1;
 		setsockopt(clientSocket, SOL_SOCKET, SO_KEEPALIVE, &opt, sizeof(1));
@@ -80,7 +73,7 @@ void addClientToTab(int clientSocket, int clients[]) {
 		// On cherche de la place
 		if (clients[i] == -1) {
 			// On ajoute le client
-			printf("Ajout du client à l'index %i\n", i);
+			OUT_LOGINT("Ajout du client à l'index", i);
 			clients[i] = clientSocket;
 			// Nouvelle connexion, envoie du message de bienvenu
 			send(clientSocket, "Entrez 'exit' pour quitter\n", 	strlen("Entrez 'exit' pour quitter\n"),
@@ -91,7 +84,7 @@ void addClientToTab(int clientSocket, int clients[]) {
 	}
 	if (found == -1) {
 		// On a plus de place de libre
-		puts("Plus de place, désolé");
+		OUT_ERR("Trop d'utilisateurs max=",NB_CLIENTS);
 		close(clientSocket);
 	}
 }
@@ -99,6 +92,7 @@ void addClientToTab(int clientSocket, int clients[]) {
 void manageClient(int clients[]) {
 	// Création d'un tampon pour stocker les messages des clients dans la heap
 	static char buffer[BUFFER_LEN + 1];
+	static char first[10];
 	for (int i = 0; i < NB_CLIENTS; i++) {
 		// On vérifie les messages
 		int clientSocket = clients[i];
@@ -110,7 +104,7 @@ void manageClient(int clients[]) {
 		int isClosed = 0;
 		if (len == -1 && errno != EAGAIN) {
 			// Une erreur est survenue
-			printf("Errno [%i] : %s\n", errno, strerror(errno));
+			OUT_ERR(strerror(errno),errno);
 			isClosed = 1;
 		} else if (len == 0) {
 			// Le client s'est déconnecté (extrémité de la socket fermée)
@@ -130,12 +124,15 @@ void manageClient(int clients[]) {
 				strcat(response, buffer);
 				// Un seul envoie permet de ne pas surcharger le réseau
 				send(clientSocket, response, strlen(response), 0);
-				printf("Message: %s\n",response);
+				OUT_LOGINT("Message du client",i);
+				strncpy(first,buffer,10);
+				first[strcspn(first, "\n")] = 0;
+				OUT_LOGCHAR("Texte",first);
 			}
 		}
 		if (isClosed == 1) {
 			// La socket est fermé ou le client veut quitter le serveur !
-			printf("Fermeture de la connexion avec le client\n");
+			OUT_LOG("Fermeture de la connexion avec le client");
 			// Fermeture de la socket
 			close(clientSocket);
 			// On fait de la place dans le tableau

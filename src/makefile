@@ -1,7 +1,7 @@
 CC=cc
 CFLAGS=-I.
-DEPS=server.h
-OBJ=server.o textchat.o
+DEPS=server.h logs.h
+OBJ=server.o textchat.o logs.o
 BINARY=textchat
 
 %.o: %.c $(DEPS)
