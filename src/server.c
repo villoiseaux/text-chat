@@ -7,6 +7,8 @@
 #include <errno.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include "server.h"
+
 
 // Port d'écoute de la socket
 #define PORT 8080
@@ -21,34 +23,8 @@
 // Commande pour arrêter le serveur
 #define EXIT_WORD "exit"
 
-void initAdresse(struct sockaddr_in * adresse);
-int initSocket(struct sockaddr_in * adresse);
-int waitForClient(int * serverSocket);
-void addClientToTab(int clientSocket, int clients[]);
-void manageClient(int clients[]);
 
-int main(void) {
-	// Création et initialisation du tableau contenant les descripteurs des sockets clients
-	int clients[NB_CLIENTS];
-	for (int i = 0; i < NB_CLIENTS; i++) {
-		clients[i] = -1;
-	}
-	// Structure contenant l'adresse
-	struct sockaddr_in adresse;
-	initAdresse(&adresse);
-	// Descripteur de la socket du serveur
-	int serverSocket = initSocket(&adresse);
-	int clientSocket;
-	while (1) {
-		// Descripteur de la socket du client, on attend une connexion
-		if ((clientSocket = waitForClient(&serverSocket)) != -1) {
-			// On ajoute le nouveau client au tableau des descripteurs
-			addClientToTab(clientSocket, clients);
-		}
-		manageClient(clients);
-	}
-	return EXIT_SUCCESS;
-}
+
 // Initialisation de la structure sockaddr_in
 void initAdresse(struct sockaddr_in * adresse) {
 	(*adresse).sin_family = AF_INET;

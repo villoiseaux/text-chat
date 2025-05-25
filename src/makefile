@@ -1,7 +1,7 @@
 CC=cc
 CFLAGS=-I.
 DEPS=server.h
-OBJ=server.o
+OBJ=server.o textchat.o
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
