@@ -9,6 +9,8 @@ BINARY=textchat
 
 $(BINARY): $(OBJ)
 	$(CC) -o $@ $^ $(CFLAGS)
+	@echo "Build done"
 
 clean:
 	rm -f *.o core $(BINARY)
+	@echo "Source repository cleaned" 
