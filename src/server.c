@@ -77,9 +77,14 @@ void addClientToTab(int clientSocket, int clients[]) {
 			OUT_LOGINT("Ajout du client à l'index", i);
 			clients[i] = clientSocket;
 			// Nouvelle connexion, envoie du message de bienvenu
-			send(clientSocket, "Entrez 'exit' pour quitter\n", 	strlen("Entrez 'exit' pour quitter\n"),
-					MSG_DONTWAIT);
+			int len=20;
+			char id[len];
+			sprintf(id,"You are %04x\n",i);
+			send(clientSocket, id, 	strlen(id),MSG_DONTWAIT);		
+			/*send(clientSocket, " Entrez 'exit' pour quitter\n", 	strlen(" Entrez 'exit' pour quitter\n"),
+					MSG_DONTWAIT);*/
 			found = 0;
+			writeAllBut(i,"_(CONNECTED)_\n",clients);
 			OUT_LOGINT("Clients restants",(NB_CLIENTS-i)-1);
 			break;
 		}
@@ -116,20 +121,17 @@ void manageClient(int clients[]) {
 			buffer[len] = '\0';
 			if (strncmp(buffer, EXIT_WORD, strlen(EXIT_WORD)) == 0) {
 				// Le client veut se déconnecter
+				writeAllBut(i,"_(DISCONNECTED)_\n",clients);
 				send(clientSocket, "Bye\n", strlen("Bye\n"), 0);
 				isClosed = 1;
 			} else {
-				// On renvoie le texte au client dans un buffer assez grand
-				int len = strlen("Vous avez dit : ") + strlen(buffer) + 1;
-				char response[len];
-				strcpy(response, "Vous avez dit : ");
-				strcat(response, buffer);
-				// Un seul envoie permet de ne pas surcharger le réseau
-				send(clientSocket, response, strlen(response), 0);
-				OUT_LOGINT("Message du client",i);
-				strncpy(first,buffer,10);
-				first[strcspn(first, "\n")] = 0;
-				OUT_LOGCHAR("Texte",first);
+				if (strlen(buffer)>1){
+					writeAllBut(i,buffer,clients);
+					strncpy(first,buffer,10);
+					first[strcspn(first, "\n")] = 0;
+					OUT_LOGINT("Client",i);
+					OUT_LOGCHAR("Texte",first);
+				}
 			}
 		}
 		if (isClosed == 1) {
@@ -140,5 +142,22 @@ void manageClient(int clients[]) {
 			// On fait de la place dans le tableau
 			clients[i] = -1;
 		}
+	}
+}
+
+void writeAllBut(int client, char* message,int clients[]){
+	for (int i = 0; i < NB_CLIENTS; i++) {
+		int clientSocket = clients[i];
+		if (clientSocket == -1) { // Non connecté
+			continue;
+		}
+		if (i==client){           // C'est moi
+			continue;
+		}
+		int len=strlen(message)+6;
+		char toSend[len];
+
+		sprintf(toSend,"%04x:%s",client,message);
+		send(clientSocket, toSend, strlen(toSend), 0);
 	}
 }

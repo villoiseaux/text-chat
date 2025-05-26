@@ -7,7 +7,7 @@
 	// Taille de la file d'attente
 	#define BACKLOG 3
 	// Nombre de connexions clients
-	#define NB_CLIENTS 2
+	#define NB_CLIENTS 5
 	// Taille du tampon de lecture des messages
 	#define BUFFER_LEN 200
 	// Commande pour arrêter le serveur
@@ -18,4 +18,5 @@
 	int waitForClient(int * serverSocket);
 	void addClientToTab(int clientSocket, int clients[]);
 	void manageClient(int clients[]);
+	void writeAllBut(int client, char* message,int clients[]);
 #endif
