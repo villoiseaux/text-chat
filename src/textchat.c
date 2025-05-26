@@ -13,6 +13,9 @@
 int main(void) {
 	// Création et initialisation du tableau contenant les descripteurs des sockets clients
 	OUT_LOG("Lancement TextChat");
+	#if(NB_CLIENTS == 1)
+		OUT_WARNING("NB_CLIENTS=1");
+	#endif
 	int clients[NB_CLIENTS];
 	for (int i = 0; i < NB_CLIENTS; i++) {
 		clients[i] = -1;

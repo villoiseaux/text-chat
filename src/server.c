@@ -68,6 +68,7 @@ int waitForClient(int * serverSocket) {
 // Ajoute les clients au tableau
 void addClientToTab(int clientSocket, int clients[]) {
 	// On vérifie si on à de la place de libre
+	OUT_LOG("Nouveau client");
 	int found = -1;
 	for (int i = 0; i < NB_CLIENTS; i++) {
 		// On cherche de la place
@@ -79,6 +80,7 @@ void addClientToTab(int clientSocket, int clients[]) {
 			send(clientSocket, "Entrez 'exit' pour quitter\n", 	strlen("Entrez 'exit' pour quitter\n"),
 					MSG_DONTWAIT);
 			found = 0;
+			OUT_LOGINT("Clients restants",(NB_CLIENTS-i)-1);
 			break;
 		}
 	}
