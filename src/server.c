@@ -114,7 +114,7 @@ void manageClient(int clients[]) {
 		} else if (len > 0) {
 			// Ajout du terminateur de chaîne
 			buffer[len] = '\0';
-			if (strncmp(buffer, EXIT_WORD, 4) == 0) {
+			if (strncmp(buffer, EXIT_WORD, strlen(EXIT_WORD)) == 0) {
 				// Le client veut se déconnecter
 				send(clientSocket, "Bye\n", strlen("Bye\n"), 0);
 				isClosed = 1;
